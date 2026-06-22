@@ -1,0 +1,116 @@
+<!-- Modern Shopping Cart -->
+
+<div class="cart-page">
+
+
+<div class="cart-header">
+
+    <h1>🛒 Shopping Cart</h1>
+
+    <p>
+        Cart ID : {{ data.uniqueid }}
+    </p>
+
+</div>
+
+<div
+    ng-if="data.cart.total == 0"
+    class="empty-cart">
+
+    <div class="empty-cart-icon">
+        🛍️
+    </div>
+
+    <h2>Your Cart is Empty</h2>
+
+    <p>
+        Looks like you haven't added any products yet.
+    </p>
+
+    <a href="/" class="continue-shopping">
+        Continue Shopping
+    </a>
+
+</div>
+
+<div
+    ng-if="data.cart.total != 0"
+    class="cart-container">
+
+    <div class="cart-items">
+
+        <div
+            class="cart-item"
+            ng-repeat="item in data.cart.items">
+
+            <div class="item-info">
+
+                <h3>{{ item.name }}</h3>
+
+                <p>
+                    SKU : {{ item.sku }}
+                </p>
+
+            </div>
+
+            <div class="item-qty">
+
+                <label>Quantity</label>
+
+                <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    ng-model="item.qty"
+                    ng-change="change(item.sku,item.qty);">
+
+            </div>
+
+            <div class="item-price">
+
+                €{{ item.subtotal.toFixed(2) }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="cart-summary-card">
+
+        <h2>Order Summary</h2>
+
+        <div class="summary-row">
+
+            <span>Tax</span>
+
+            <span>
+                €{{ data.cart.tax.toFixed(2) }}
+            </span>
+
+        </div>
+
+        <div class="summary-row total-row">
+
+            <span>Total</span>
+
+            <span>
+                €{{ data.cart.total.toFixed(2) }}
+            </span>
+
+        </div>
+
+        <button
+            class="checkout-btn"
+            ng-click="buy();">
+
+            Proceed To Checkout
+
+        </button>
+
+    </div>
+
+</div>
+
+
+</div>
