@@ -157,6 +157,12 @@ font-weight:600;
 padding:20px;
 }
 
+.message-success{
+color:#16a34a;
+font-weight:600;
+padding:20px;
+}
+
 .footer{
 color:var(--text-muted);
 padding:20px;
