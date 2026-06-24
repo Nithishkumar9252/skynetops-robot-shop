@@ -66,7 +66,30 @@
 
     robotshop.controller('shopform', function($scope, $http, $location, currentUser) {
         $scope.data = {};
+        $scope.data.user = currentUser.user || {};
+        $scope.currentUser = currentUser;
+        $scope.$watch(
+            function () {
+                return currentUser.user;
+            },
+            function (newVal) {
+                if (newVal && newVal.name) {
+                    $scope.data.user = newVal;
+                }
+            },
+            true
+        );
+                console.log("CURRENT USER:", currentUser);
+        console.log("DATA USER:", $scope.data.user);
+        $scope.logout = function() {
 
+            currentUser.user = {};
+            currentUser.uniqueid = '';
+
+            $scope.data.user = {};
+
+            $location.path('/');
+        };
         $scope.data.uniqueid = 'foo';
         $scope.data.categories = [];
         $scope.data.products = {};
@@ -189,7 +212,7 @@
         search(text);
     });
 
-    robotshop.controller('productform', function($scope, $http, $routeParams, $timeout, currentUser) {
+    robotshop.controller('productform', function($scope, $http, $routeParams,$location, $timeout, currentUser) {
         $scope.data = {};
         $scope.data.message = ' ';
         $scope.data.product = {};
@@ -198,23 +221,63 @@
         $scope.data.quantity = 1;
 
         $scope.addToCart = function() {
-            var url = '/api/cart/add/' + currentUser.uniqueid + '/' + $scope.data.product.sku + '/' + $scope.data.quantity;
+
+            // User not logged in
+            if (!currentUser.user || !currentUser.user.name) {
+
+                alert('Please login to add products to cart.');
+
+                $timeout(function () {
+                    $location.path('/login');
+                }, 1500);
+
+                return;
+            }
+             if ($scope.data.quantity > $scope.data.product.instock) {
+
+                    alert(
+                        'Only ' +
+                        $scope.data.product.instock +
+                        ' items available'
+                    );
+
+                    return;
+                }
+
+            var url = '/api/cart/add/' +
+                currentUser.uniqueid + '/' +
+                $scope.data.product.sku + '/' +
+                $scope.data.quantity;
+
             console.log('addToCart', url);
+
             $http({
                 url: url,
                 method: 'GET'
             }).then((res) => {
+
                 console.log('cart', res.data);
+
                 currentUser.cart = res.data;
-                $scope.data.message = 'Added to cart';
+                $scope.data.product.instock =
+                    $scope.data.product.instock - parseInt($scope.data.quantity);
+                $scope.data.message = '✅ Product added to cart';
+
                 $timeout(clearMessage, 3000);
+
             }).catch((e) => {
+
                 console.log('ERROR', e);
-                $scope.data.message = 'ERROR ' + e;
+
+                $scope.data.message = 'Failed to add item';
+
                 $timeout(clearMessage, 3000);
+
             });
         };
-
+        $scope.quantityChanged = function() {
+            console.log("Quantity =", $scope.data.quantity);
+        };
         $scope.rateProduct = function(score) {
             console.log('rate product', $scope.data.product.sku, score);
             var url = '/api/ratings/api/rate/' + $scope.data.product.sku + '/' + score;
@@ -348,21 +411,29 @@
         };
 
         $scope.confirmShipping = function() {
-            console.log('shipping confirmed');
-            $http({
-                url: '/api/shipping/confirm/' + currentUser.uniqueid,
-                method: 'POST',
-                data: $scope.data.shipping
-            }).then((res) => {
-                // go to final confirmation
-                console.log('confirm cart', res.data);
-                // save new cart
-                currentUser.cart = res.data;
-                $location.url('/payment');
-            }).catch((e) => {
-                console.log('ERROR', e);
-            });
-        };
+
+    console.log('shipping confirmed');
+
+    console.log('currentUser.uniqueid =', currentUser.uniqueid);
+
+    console.log('shipping data =', $scope.data.shipping);
+
+    $http({
+        url: '/api/shipping/confirm/' + currentUser.uniqueid,
+        method: 'POST',
+        data: $scope.data.shipping
+    }).then((res) => {
+
+        console.log('confirm cart', res.data);
+
+        currentUser.cart = res.data;
+
+        $location.url('/payment');
+
+    }).catch((e) => {
+        console.log('ERROR', e);
+    });
+};
 
         $scope.countryChanged = function() {
             console.log('selected', $scope.data.selectedCountry);
